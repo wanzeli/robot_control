@@ -1,0 +1,7 @@
+string mesh_path
+string refer_frame
+string object_id
+float32[] object_pose_list
+float32[] size
+---
+string[] objects_id

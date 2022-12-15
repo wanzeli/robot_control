@@ -1,0 +1,6 @@
+string box_name
+string refer_frame
+float32[] box_pose_list
+float32[] box_size
+---
+string[] objects_id
