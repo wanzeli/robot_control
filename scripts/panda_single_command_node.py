@@ -7,15 +7,17 @@ import numpy as np
 
 if __name__ == '__main__':
     PRC = panda_robot_client()
-    T1 = [0.0, -np.pi/8, 0.0, -2*np.pi/4, 0.0, np.pi/1.1, np.pi/5]
+    # T1 = [0.0, -np.pi/8, 0.0, -2*np.pi/4, 0.0, np.pi/1.1, np.pi/5]
     # T2 = [0.4, 0.1, 0.4, 0, 0, 0, 1]
     # width = 0.02
-    S1 = PRC.moveToJoint(T1)
-    print(S1)
+    # T1 = [0.0, -np.pi / 4, 0.0, -2 * np.pi / 3, 0.0, np.pi / 3, np.pi / 4]
+    # T1 = [0.0, -np.pi / 4, 0.0, -2 * np.pi / 3, 0.0, np.pi / 3, np.pi / 4]
+    # S1 = PRC.moveToJoint(T1)
+    # print(S1)
     # S2 = PRC.moveToPose(T2)
     # print(S2)
-    curr_pose = PRC.getPose()
-    print(curr_pose.pose)
+    # curr_pose = PRC.getPose()
+    # print(curr_pose.pose)
     curr_state = PRC.getJointStates()
     print(curr_state.joints_state)
     # # S3 = PRC.moveGripper(width)
@@ -33,8 +35,8 @@ if __name__ == '__main__':
     # print(object_list)
 
     # box_name = 'box'
-    # refer_frame = 'World'
-    # box_pose_list = [1,1,2,0,0,0,1]
-    # box_size = (0.5, 0.5, 0.5)
+    # refer_frame = 'world'
+    # box_pose_list = [0.4,0,0.05,0,0,0,1]
+    # box_size = (0.4, 0.2, 0.15)
     # object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
     # print(object_list)
