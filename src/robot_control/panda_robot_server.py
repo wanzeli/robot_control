@@ -8,7 +8,7 @@ import time
 
 class pandaRobotServer():
 
-    def __init__(self, group_name='panda_arm', group_hand_name='hand'):
+    def __init__(self, group_name='panda_arm', group_hand_name='panda_hand'):
 
         self.robot = moveit_commander.RobotCommander()
         self.scene = moveit_commander.PlanningSceneInterface()
@@ -210,7 +210,7 @@ class pandaRobotServer():
         ground_name = 'Ground'
         ground_size = [10, 10, 0.01]
         ground_pose = [0, 0, -0.01, 0, 0, 0, 1]
-        refer_frame = 'World' #self.robot.get_planning_frame()
+        refer_frame = 'world' #self.robot.get_planning_frame()
         r1 = self.add_box(ground_name, ground_size, ground_pose, refer_frame)
         if r1 == True: 
             print('-----ground has been loaded to scene--------')
