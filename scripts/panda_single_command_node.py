@@ -46,15 +46,15 @@ if __name__ == '__main__':
     # print(curr_state.joints_state)
 
 
-    width = 0.01 #0.065/2
+    width = 0.02 #0.065/2
     S3 = PRC.moveGripper(width)
     print(S3)
     rospy.sleep(1)
     # S1 = PRC.moveStop()
     # print(S1)
-    width = 0.04 #0.065/2
-    S3 = PRC.moveGripper(width)
-    print(S3)
+    # width = 0.08 #0.065/2
+    # S3 = PRC.moveGripper(width)
+    # print(S3)
     # S1 = PRC.moveToJoint(T1)
     # print(S1)
     # S1 = PRC.moveToJoint(T1)
