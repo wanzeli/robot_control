@@ -5,6 +5,9 @@ import moveit_commander
 import geometry_msgs.msg
 from robot_control.srv import move2joint, move2pose, moveGripper, stop, getJoints, getGripper, getPose, addMesh, addBox
 import time
+import actionlib
+import franka_gripper.msg
+from control_msgs.msg import GripperCommandAction, GripperCommandGoal
 
 class pandaRobotServer():
 
@@ -60,7 +63,7 @@ class pandaRobotServer():
         joint_goal[0] = width
         joint_goal[1] = width
 
-        move_success = move_group.go(joint_goal, wait=True)
+        move_success = move_group.go(joint_goal, wait=False)
         move_group.stop()
 
         if move_success:
@@ -71,13 +74,67 @@ class pandaRobotServer():
             rospy.loginfo("Failure")
         
         return success
+
+    def move_gripper2(self, width=0.04, speed = 0.05):
+        self.move_action_client = actionlib.SimpleActionClient("/franka_gripper/move", franka_gripper.msg.MoveAction)
+        self.move_action_client.wait_for_server()
+        goal = franka_gripper.msg.MoveGoal()
+        goal.width = width
+        goal.speed = speed
+        self.move_action_client.send_goal(goal)
+        result = self.move_action_client.wait_for_result(rospy.Duration(1.5))
+
+        if not result.success: 
+            self.stop_gripper()
+
+        return result
+
+    def move_gripper3(self, width=0.04, max_effort = 0.1):
+        self.move_action_client = actionlib.SimpleActionClient("/franka_gripper/action", GripperCommandAction)
+        self.move_action_client.wait_for_server()
+        goal = GripperCommandGoal()
+        goal.command.position = width
+        goal.command.max_effort = max_effort
+        self.move_action_client.send_goal(goal)
+        result = self.move_action_client.wait_for_result(rospy.Duration(15.))
+
+        return result
+
+    def move_gripper4(self, width=0.04, epsilon_inner = 0.005, epsilon_outer = 0.05, speed = 0.05, force = 1.0):
+        self.move_action_client = actionlib.SimpleActionClient("/franka_gripper/grasp", franka_gripper.msg.GraspAction)
+        self.move_action_client.wait_for_server()
+        goal = franka_gripper.msg.GraspGoal()
+        goal.width = width
+        goal.epsilon.inner = epsilon_inner
+        goal.epsilon.outer = epsilon_outer
+        goal.speed = speed
+        goal.force = force
+        self.move_action_client.send_goal(goal)
+        result = self.move_action_client.wait_for_result(rospy.Duration(15.))
+
+        return result
     
+    def stop_gripper(self): 
+        self.stop_action_client = actionlib.SimpleActionClient("/franka_gripper/stop", franka_gripper.msg.StopAction)
+        self.stop_action_client.wait_for_server()
+        goal = franka_gripper.msg.StopGoal()
+        self.stop_action_client.send_goal(goal)
+        result = self.stop_action_client.wait_for_result(rospy.Duration(15.))
+
+        return result
+
     def stop_movement_handle(self, req):
 
         move_group = self.move_group
         move_group.stop()
 
         return 1
+
+    def stop_movement_handle2(self, req):
+
+        result = self.stop_gripper()
+
+        return result
     
     def go_to_joint_state_handle(self, req):
         joint_goal = req.goal_joint.position
@@ -93,7 +150,7 @@ class pandaRobotServer():
 
     def move_gripper_handle(self, req):
         width = req.width
-        success = self.move_gripper(width)
+        success = self.move_gripper2(width)
 
         return success
     
@@ -220,7 +277,7 @@ class pandaRobotServer():
         rospy.Service("panda_move_to_joint_state_server", move2joint, self.go_to_joint_state_handle)
         rospy.Service("panda_move_to_pose_server", move2pose, self.go_to_pose_goal_handle)
         rospy.Service("panda_move_gripper_server", moveGripper, self.move_gripper_handle)
-        rospy.Service("panda_stop_server", stop, self.stop_movement_handle)
+        rospy.Service("panda_stop_server", stop, self.stop_movement_handle2)
         rospy.Service("panda_get_states", getJoints, self.get_joints_state_handle)
         rospy.Service("panda_get_pose", getPose, self.get_pose_handle)      
         rospy.Service("panda_get_gripper", getGripper, self.get_gripper_state_handle)
