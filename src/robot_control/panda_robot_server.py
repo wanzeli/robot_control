@@ -59,13 +59,12 @@ class pandaRobotServer():
     
     def plan_to_pose_goal(self, pose_goal=None): 
         move_group = self.move_group
-
         move_group.set_pose_target(pose_goal)
         plan = move_group.plan()
         move_group.stop()
         move_group.clear_pose_targets()
 
-        if not plan.joint_trajectory.points:
+        if not plan[1].joint_trajectory.points:
             success = 0
             rospy.loginfo("Plan Failed")
         else:
