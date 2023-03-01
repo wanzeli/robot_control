@@ -101,9 +101,6 @@ class pandaRobotServer():
         self.move_action_client.send_goal(goal)
         result = self.move_action_client.wait_for_result(rospy.Duration(1.5))
 
-        if not result.success: 
-            self.stop_gripper()
-
         return result
 
     def move_gripper3(self, width=0.04, max_effort = 0.1):
