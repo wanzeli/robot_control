@@ -56,6 +56,23 @@ class pandaRobotServer():
         
         return success
     
+    def plan_to_pose_goal(self, pose_goal=None): 
+        move_group = self.move_group
+
+        move_group.set_pose_target(pose_goal)
+        plan = move_group.plan()
+        move_group.stop()
+        move_group.clear_pose_targets()
+
+        if not plan.joint_trajectory.points:
+            success = 0
+            rospy.loginfo("Plan Failed")
+        else:
+            success = 1
+            rospy.loginfo("Plan Succeed")
+        
+        return success
+    
     def move_gripper(self, width=0.035):
 
         move_group = self.move_group_hand
@@ -145,6 +162,12 @@ class pandaRobotServer():
     def go_to_pose_goal_handle(self, req):
         pose_goal = req.goal_pose
         success = self.go_to_pose_goal(pose_goal)
+
+        return success
+
+    def plan_to_pose_goal_handle(self, req):
+        pose_goal = req.goal_pose
+        success = self.plan_to_pose_goal(pose_goal)
 
         return success
 
@@ -276,6 +299,7 @@ class pandaRobotServer():
     def run_panda_service(self):
         rospy.Service("panda_move_to_joint_state_server", move2joint, self.go_to_joint_state_handle)
         rospy.Service("panda_move_to_pose_server", move2pose, self.go_to_pose_goal_handle)
+        rospy.Service("panda_plan_to_pose_server", move2pose, self.plan_to_pose_goal_handle)
         rospy.Service("panda_move_gripper_server", moveGripper, self.move_gripper_handle)
         rospy.Service("panda_stop_server", stop, self.stop_movement_handle2)
         rospy.Service("panda_get_states", getJoints, self.get_joints_state_handle)

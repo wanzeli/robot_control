@@ -11,7 +11,7 @@ if __name__ == '__main__':
     # T2 = [0.4, 0.1, 0.4, 0, 0, 0, 1]
     # width = 0.02
     T1 = [0.0, -np.pi / 4, 0.0, -2 * np.pi / 3, 0.0, np.pi / 3, np.pi / 4]
-    grasp_pose = [0.33315399289131165, -0.08119062334299088, 0.24201440811157227, 0.912229597568512, -0.40948382019996643, 0.002384389052167535, 0.012427362613379955]
+    grasp_pose = [0.4735301434993744, -0.022408511489629745, 0.4115336835384369, -0.9117316603660583, -0.4099779427051544, 0.02216835506260395, 0.01311434991657734]
     pre_grasp_pose = [0.49345189332962036, -0.02387768216431141, 0.4, 0.917822003364563, -0.395513117313385, -0.03175073117017746, 0.012807437218725681]
     pre_place_pose = [0.6167065188507247, 0.037537305824227596, 0.3287496909581556, 0.2885027003250105, 0.6272323513605325, 0.41285021831548496, 0.5940542622932444]
     place_pose = [0.7667065188507247, 0.037537305824227596, 0.3287496909581556, 0.2885027003250105, 0.6272323513605325, 0.41285021831548496, 0.5940542622932444]
@@ -33,28 +33,30 @@ if __name__ == '__main__':
     
     # # T2 = [0.6393822431564331, 0.0031410674564540386, 0.5713240504264832, -0.6695536971092224, 0.2640250027179718, -0.6465916037559509, 0.2528001666069031]
     # T2 = [0.15, 0.3, 0.5592673633147, 0.486773551136288, -0.47951924717505795, 0.6268556890443894, -0.3743858258742136]
-    # S2 = PRC.moveToPose(T2)
-    # print(S2)
+    S2 = PRC.moveToPose(grasp_pose)
+    print(S2)
 
     # T3 = [0.3, 0.3, 0.5592673633147, 0.486773551136288, -0.47951924717505795, 0.6268556890443894, -0.3743858258742136]
-    # S2 = PRC.moveToPose(grasp_pose)
+    # pre_place_pose = [0.6150994959022268, 0.07523005487653417, 0.809922364005978, 0.12496298395989684, -0.6909510755185653, 0.6985811909707228, 0.1376778250173312]
+    # place_pose = [0.7750994959022268, 0.07523005487653417, 0.809922364005978, 0.12496298395989684, -0.6909510755185653, 0.6985811909707228, 0.1376778250173312]
+    # S2 = PRC.moveToPose(place_pose)
     # print(S2)
     
-    # curr_pose = PRC.getPose()
-    # print(curr_pose.pose)
+    curr_pose = PRC.getPose()
+    print(curr_pose.pose)
     # curr_state = PRC.getJointStates()
     # print(curr_state.joints_state)
 
 
-    width = 0.01 #0.065/2
+    width = 0.08 #0.065/2
     S3 = PRC.moveGripper(width)
     print(S3)
-    rospy.sleep(1)
-    # S1 = PRC.moveStop()
-    # print(S1)
-    width = 0.04 #0.065/2
-    S3 = PRC.moveGripper(width)
-    print(S3)
+    # rospy.sleep(1)
+    # # S1 = PRC.moveStop()
+    # # print(S1)
+    # width = 0.04 #0.065/2
+    # S3 = PRC.moveGripper(width)
+    # print(S3)
     # S1 = PRC.moveToJoint(T1)
     # print(S1)
     # S1 = PRC.moveToJoint(T1)
@@ -71,16 +73,44 @@ if __name__ == '__main__':
     # object_list = PRC.add_mesh(object_path, refer_frame, object_id, object_pose_list, size)
     # print(object_list)
 
-    # box_name = 'box'
-    # refer_frame = 'world'
-    # box_pose_list = [0.455,-0.01,0.045,0,0,0,1]
-    # box_size = (0.31, 0.29, 0.097)
-    # object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
-    # print(object_list)
+    box_name = 'box'
+    refer_frame = 'world'
+    box_pose_list = [0.455,-0.01,0.1325,0,0,0,1]
+    box_size = (0.31, 0.29, 0.097)
+    object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
+    print(object_list)
 
     # box_name = 'wall'
     # refer_frame = 'world'
     # box_pose_list = [0.87,0,0.40,0,0,0,1]
     # box_size = (0.04, 0.60, 0.80)
+    # object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
+    # print(object_list)
+
+    # box_name = '4040_left'
+    # refer_frame = 'world'
+    # box_pose_list = [0.87,-0.29,0.44,0,0,0,1]
+    # box_size = (0.04, 0.04, 0.88)
+    # object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
+    # print(object_list)
+
+    # box_name = '4040_horizon'
+    # refer_frame = 'world'
+    # box_pose_list = [0.87,-0.02,0.72,0,0,0,1]
+    # box_size = (0.04, 0.50, 0.04)
+    # object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
+    # print(object_list)
+
+    # box_name = '4040_right'
+    # refer_frame = 'world'
+    # box_pose_list = [0.87,0.25,0.44,0,0,0,1]
+    # box_size = (0.04, 0.04, 0.88)
+    # object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
+    # print(object_list)
+
+    # box_name = '4040'
+    # refer_frame = 'world'
+    # box_pose_list = [0.37,0.3,0.25,0,0,0,1]
+    # box_size = (0.04, 0.04, 0.50)
     # object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
     # print(object_list)

@@ -45,6 +45,25 @@ class panda_robot_client():
 
         return success
 
+    def planToPose(self, target): 
+        '''
+        plan the panda arm to a specific pose of the end effector
+        target: a 7D list, specify the target pose of the endeffector: [x,y,z,ox,oy,oz,w]
+        '''        
+        rospy.wait_for_service("panda_plan_to_pose_server")
+        pose_goal = Pose()
+        pose_goal.position.x = target[0]
+        pose_goal.position.y = target[1]
+        pose_goal.position.z = target[2]
+        pose_goal.orientation.x = target[3]
+        pose_goal.orientation.y = target[4]
+        pose_goal.orientation.z = target[5]
+        pose_goal.orientation.w = target[6]
+        plan_to_pose_client = rospy.ServiceProxy("panda_plan_to_pose_server", move2pose)
+        success = plan_to_pose_client(pose_goal)
+
+        return success
+
     def moveGripper(self, width): 
         '''
         move the panda hand gripper to specific position
