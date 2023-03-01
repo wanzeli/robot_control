@@ -3,6 +3,7 @@
 import rospy
 import moveit_commander
 import geometry_msgs.msg
+import moveit_msgs.msg
 from robot_control.srv import move2joint, move2pose, moveGripper, stop, getJoints, getGripper, getPose, addMesh, addBox
 import time
 import actionlib
