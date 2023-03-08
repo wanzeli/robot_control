@@ -70,6 +70,8 @@ catkin_python_setup()
   getPose.srv
   addMesh.srv
   addBox.srv
+  attachMesh.srv
+  removeMesh.srv
  )
 
 ## Generate actions in the 'action' folder

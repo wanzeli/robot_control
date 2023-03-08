@@ -4,7 +4,7 @@ import rospy
 import moveit_commander
 import geometry_msgs.msg
 import moveit_msgs.msg
-from robot_control.srv import move2joint, move2pose, moveGripper, stop, getJoints, getGripper, getPose, addMesh, addBox
+from robot_control.srv import move2joint, move2pose, moveGripper, stop, getJoints, getGripper, getPose, addMesh, addBox, attachMesh, removeMesh
 import time
 import actionlib
 import franka_gripper.msg
@@ -208,6 +208,26 @@ class pandaRobotServer():
         objects_in_scene = self.scene.get_known_object_names()
         return (objects_in_scene, )
 
+    def attach_mesh_handle(self, req): 
+        object_path = req.mesh_path
+        object_id = req.object_id
+        object_pose_list = req.object_pose_list
+        size = req.size
+        S = self.attach_mesh(object_path, object_id, object_pose_list, size)
+        if S == True: 
+            rospy.loginfo('the object has been attached to the endeffector')
+        else: 
+            rospy.logerr('the object is failed to be attached to the endeffector')
+        
+        attached_object = self.scene.get_attached_objects()
+        return (attached_object, )
+
+    def detach_mesh_handle(self, req): 
+        object_name = req.mesh_name
+        S = self.detachMesh(object_name)
+
+        return S
+
     def add_box_handle(self, req): 
         box_name = req.box_name
         refer_frame = req.refer_frame
@@ -273,13 +293,53 @@ class pandaRobotServer():
         object_pose.pose.orientation.z = object_pose_list[5]
         object_pose.pose.orientation.w = object_pose_list[6]
 
+        print(object_path)
         self.scene.add_mesh(object_id, object_pose, object_path, size)
         time.sleep(0.5)
         if object_id in self.scene.get_known_object_names(): 
             return True 
         else: 
             return False
-    
+
+    def attach_mesh(self, object_path, object_id, object_pose_list, size = (1,1,1), refer_frame='world'): 
+        '''
+        This function attach a mesh into the robot end effector
+        '''
+        object_pose = geometry_msgs.msg.PoseStamped()
+        object_pose.header.frame_id = refer_frame
+        object_pose.pose.position.x = object_pose_list[0]
+        object_pose.pose.position.y = object_pose_list[1]
+        object_pose.pose.position.z = object_pose_list[2]
+        object_pose.pose.orientation.x = object_pose_list[3]
+        object_pose.pose.orientation.y = object_pose_list[4]
+        object_pose.pose.orientation.z = object_pose_list[5]
+        object_pose.pose.orientation.w = object_pose_list[6]
+
+        touch_links = self.robot.get_link_names('panda_hand') # disable collsion detection between objact and robot hand
+        eef_link = self.eef_link
+        self.scene.attach_mesh(eef_link, object_id, pose = object_pose, filename = object_path, size = size, touch_links = touch_links)
+        rospy.sleep(1)
+
+        attached_object = self.scene.get_attached_objects()
+        if object_id in attached_object: 
+            return True
+        else: 
+            return False
+
+    def detachMesh(self, name): 
+        '''
+        This function remove the attached mesh model
+        '''
+        eef_link = self.eef_link
+        self.scene.remove_attached_object(eef_link, name)
+        time.sleep(0.5)
+
+        attached_object = self.scene.get_attached_objects()
+        if name in attached_object: 
+            return False
+        else: 
+            return True
+
     def addGround(self): 
         '''
         This function loads only ground to the planning scene
@@ -304,6 +364,8 @@ class pandaRobotServer():
         rospy.Service("panda_get_gripper", getGripper, self.get_gripper_state_handle)
         rospy.Service("add_mesh", addMesh, self.add_mesh_handle)
         rospy.Service("add_box", addBox, self.add_box_handle)
+        rospy.Service("attach_mesh", attachMesh, self.attach_mesh_handle)
+        rospy.Service("detach_mesh", removeMesh, self.detach_mesh_handle)
 
 
 
