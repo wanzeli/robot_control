@@ -305,6 +305,9 @@ class pandaRobotServer():
         '''
         This function attach a mesh into the robot end effector
         '''
+        # check if the object is already in the scene: 
+        if object_id in self.scene.get_known_object_names(): 
+            self.scene.remove_world_object(object_id)
         object_pose = geometry_msgs.msg.PoseStamped()
         object_pose.header.frame_id = refer_frame
         object_pose.pose.position.x = object_pose_list[0]
