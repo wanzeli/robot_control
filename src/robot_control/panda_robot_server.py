@@ -4,24 +4,32 @@ import rospy
 import moveit_commander
 import geometry_msgs.msg
 import moveit_msgs.msg
-from robot_control.srv import move2joint, move2pose, moveGripper, stop, getJoints, getGripper, getPose, addMesh, addBox, attachMesh, removeMesh
+from robot_control.srv import move2joint, move2pose, moveGripper, stop, getJoints, getGripper, getPose, addMesh, addBox, attachMesh, removeMesh, getForce, removeObject
 import time
 import actionlib
 import franka_gripper.msg
 from control_msgs.msg import GripperCommandAction, GripperCommandGoal
+from scipy.spatial.transform import Rotation as R
+import numpy as np
 
 class pandaRobotServer():
 
-    def __init__(self, group_name='panda_arm', group_hand_name='panda_hand'):
+    def __init__(self, group_name='panda_arm', group_hand_name='panda_hand', force_topic='/franka_state_controller/F_ext'):
 
         self.robot = moveit_commander.RobotCommander()
         self.scene = moveit_commander.PlanningSceneInterface()
         self.move_group = moveit_commander.MoveGroupCommander(group_name)
         self.move_group_hand = moveit_commander.MoveGroupCommander(group_hand_name)
         self.eef_link = self.move_group.get_end_effector_link()
+        print('the end effector link is: ', self.eef_link)
 
         self.allowReplanning()
         r_ground = self.addGround()
+
+        # set up the subscriber to get force: 
+        
+        self.forceSub = rospy.Subscriber(force_topic, geometry_msgs.msg.WrenchStamped, self.getForceCb)
+        self.force = []
         
 
     def go_to_joint_state(self, joint_goal=None):
@@ -189,6 +197,36 @@ class pandaRobotServer():
                      pose.pose.orientation.w]
         return (curr_pose, )
 
+    def getForceCb(self, msg): 
+        '''
+        This function save the force 
+        '''
+        if msg is None: 
+            rospy.logwarn('forceCb: msg is None!')
+        else: 
+            Force_msg = msg.wrench.force
+            self.force = [Force_msg.x, Force_msg.y, Force_msg.z]
+    
+    def get_force_handle(self, req): 
+        '''
+        This function get the current force and tranfromed it into world frame: 
+        '''
+        pose = self.move_group.get_current_pose()
+        quat = [pose.pose.orientation.x, 
+                pose.pose.orientation.y, 
+                pose.pose.orientation.z, 
+                pose.pose.orientation.w]
+        r = R.from_quat(quat)
+        Rot = r.as_matrix()
+        force_ee = self.force
+        if len(force_ee) != 0: 
+            force = Rot @ np.asarray(force_ee)
+        else: 
+            print('cannot receive force')
+            force = np.array([])
+
+        return (force, )
+
     def get_gripper_state_handle(self, req): 
         curr_gripper_state = self.move_group_hand.get_current_joint_values()
         return (curr_gripper_state, )
@@ -301,12 +339,29 @@ class pandaRobotServer():
         else: 
             return False
 
+    def remove_object_handle(self, req):
+        '''
+        This function remove the objects from scene
+        ''' 
+        object_id = req.object_id
+        if object_id in self.scene.get_known_object_names(): 
+            self.scene.remove_world_object(object_id)   
+            time.sleep(0.5)
+            if object_id in self.scene.get_known_object_names(): 
+                print('object list is: ', self.scene.get_known_object_names())
+                return False 
+            else: 
+                return True
+        else: 
+            print('object to be removed is not in the scene')
+            return True
+
     def attach_mesh(self, object_path, object_id, object_pose_list, size = (1,1,1), refer_frame='world'): 
         '''
         This function attach a mesh into the robot end effector
         '''
         # check if the object is already in the scene: 
-        if object_id in self.scene.get_known_object_names(): 
+        if object_id in self.scene.get_known_object_names() and object_path != '': 
             self.scene.remove_world_object(object_id)
         object_pose = geometry_msgs.msg.PoseStamped()
         object_pose.header.frame_id = refer_frame
@@ -335,6 +390,7 @@ class pandaRobotServer():
         '''
         eef_link = self.eef_link
         self.scene.remove_attached_object(eef_link, name)
+        self.scene.remove_world_object(name)
         time.sleep(0.5)
 
         attached_object = self.scene.get_attached_objects()
@@ -365,10 +421,12 @@ class pandaRobotServer():
         rospy.Service("panda_get_states", getJoints, self.get_joints_state_handle)
         rospy.Service("panda_get_pose", getPose, self.get_pose_handle)      
         rospy.Service("panda_get_gripper", getGripper, self.get_gripper_state_handle)
+        rospy.Service("panda_get_force", getForce, self.get_force_handle)
         rospy.Service("add_mesh", addMesh, self.add_mesh_handle)
         rospy.Service("add_box", addBox, self.add_box_handle)
         rospy.Service("attach_mesh", attachMesh, self.attach_mesh_handle)
         rospy.Service("detach_mesh", removeMesh, self.detach_mesh_handle)
+        rospy.Service("remove_object", removeObject, self.remove_object_handle)
 
 
 

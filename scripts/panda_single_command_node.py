@@ -3,7 +3,73 @@
 import rospy
 from robot_control.panda_robot_client import panda_robot_client
 import numpy as np
+from robot_control.utils import *
+import moveit_commander
+import geometry_msgs.msg
+from geometry_msgs.msg import Pose
+from scipy.spatial.transform import Rotation as R
 
+class dumb_place(): 
+
+    def __init__(self, group_name='panda_arm', group_hand_name='panda_hand', force_topic='/franka_state_controller/F_ext'):
+        self.robot = moveit_commander.RobotCommander()
+        self.scene = moveit_commander.PlanningSceneInterface()
+        self.move_group = moveit_commander.MoveGroupCommander(group_name)
+        self.move_group_hand = moveit_commander.MoveGroupCommander(group_hand_name)
+        self.eef_link = self.move_group.get_end_effector_link()
+
+        # set up the subscriber to get force: 
+        self.forceSub = rospy.Subscriber(force_topic, geometry_msgs.msg.WrenchStamped, self.getForceCb)
+        self.force = []
+        self.force_control_flag = 0
+        self.force_thr = -5
+        self.stop = False
+    
+    def getForceCb(self, msg): 
+        '''
+        This function save the force 
+        '''
+        if msg is None: 
+            rospy.logwarn('forceCb: msg is None!')
+        else: 
+            Force_msg = msg.wrench.force
+            self.force = [Force_msg.x, Force_msg.y, Force_msg.z]
+            pose = self.move_group.get_current_pose()
+            quat = [pose.pose.orientation.x, 
+                    pose.pose.orientation.y, 
+                    pose.pose.orientation.z, 
+                    pose.pose.orientation.w]
+            r = R.from_quat(quat)
+            Rot = r.as_matrix()
+            force_w = Rot @ np.asarray(self.force) # transform the force from ee link to world
+            if force_w[2] < self.force_thr and self.force_control_flag == 1: 
+                print('Hanger contacts with supporter')
+                print(force_w)
+                self.move_group.stop()
+                self.stop = True 
+
+    def go_to_pose(self, target=None):
+
+        pose_goal = Pose()
+        pose_goal.position.x = target[0]
+        pose_goal.position.y = target[1]
+        pose_goal.position.z = target[2]
+        pose_goal.orientation.x = target[3]
+        pose_goal.orientation.y = target[4]
+        pose_goal.orientation.z = target[5]
+        pose_goal.orientation.w = target[6]
+
+        self.move_group.set_pose_target(pose_goal)
+        move_success = self.move_group.go(wait=False)
+
+        if move_success:
+            success = 1
+            rospy.loginfo("Success")
+        else:
+            success = 0
+            rospy.loginfo("Failure")
+        
+        return success
 
 if __name__ == '__main__':
     PRC = panda_robot_client()
@@ -31,15 +97,30 @@ if __name__ == '__main__':
     # T1 = [-0.13912776112556458, 0.38246676325798035, -0.3782239258289337, -1.0559041500091553, 0.6242861151695251, 2.890017032623291, 1.2693341970443726]
     # T1 = [0.1, -np.pi / 4, 0.0, -2 * np.pi / 3, 0.0, np.pi / 3, np.pi / 4]
     # T1 = [0.007464191876351833, -0.10961239039897919, -0.21164244413375854, -2.3060545921325684, -0.0010407171212136745, 2.214181900024414, 1.409178614616394]
-    # S1 = PRC.moveToJoint(T1)
-    # print(S1)
+    # T1 = [-0.2164285033941269, 0.3437270224094391, -0.45246851444244385, -0.9604554772377014, 0.746423065662384, 2.889063596725464, 1.1668925285339355]
+    S1 = PRC.moveToJoint(T1)
+    print(S1)
+
+    # test of DP: 
+    # test_pose = [0.5883997082710266, 0.005055442452430725, 0.5375858545303345, -0.7093841433525085, 0.22160424292087555, -0.622818112373352, 0.2444652020931244]
+    # DP = dumb_place()
+    # curr_pose = PRC.getPose().pose
+    # while curr_pose[2] > 0.48 and DP.stop == False: 
+    #     local_pose = [curr_pose[0], curr_pose[1], curr_pose[2]-0.005, curr_pose[3], curr_pose[4], curr_pose[5], curr_pose[6]]
+    #     S = DP.go_to_pose(test_pose)
+    #     curr_pose = PRC.getPose().pose
+    #     print(S)
+
+    # force = PRC.getForce()
+    # print(force)
 
     # T2 = [0.37133273272372674, -0.043481634985421846, 0.24082379745621751, 0.9364627309890373, -0.33340443230036093, 0.06973846931779444, -0.08375908242237998]
     # T2 = [0.004585887771099806, 0.40176722407341003, 0.8177175521850586, -0.6473002433776855, -0.26359590888023376, -0.29538509249687195, 0.6513580083847046]
     
     # # T2 = [0.6393822431564331, 0.0031410674564540386, 0.5713240504264832, -0.6695536971092224, 0.2640250027179718, -0.6465916037559509, 0.2528001666069031]
     # T2 = [0.15, 0.3, 0.5592673633147, 0.486773551136288, -0.47951924717505795, 0.6268556890443894, -0.3743858258742136]
-    # S2 = PRC.moveToPose(grasp_pose)
+    # place_pose = [0.5943218858081931, 0.04779632998015265, 0.4644853344898147, 0.34337192086029567, 0.6297754792810232, 0.28647646205305793, 0.635145500142]
+    # S2 = PRC.moveToPose(place_pose)
     # print(S2)
 
     # P1 = PRC.planToPose(grasp_pose)
@@ -53,13 +134,17 @@ if __name__ == '__main__':
     
     curr_pose = PRC.getPose()
     print(curr_pose.pose)
-    # curr_state = PRC.getJointStates()
-    # print(curr_state.joints_state)
+    curr_state = PRC.getJointStates()
+    print(curr_state.joints_state)
 
+    # width = 0.002#0.065/2
+    # S3 = PRC.moveGripper(width)
 
-    width = 0.06#0.065/2
-    S3 = PRC.moveGripper(width)
-    print(S3)
+    # g_w = PRC.getGripperStates()
+    # print(g_w.gripper_state[0])
+    # S4 = PRC.remove_object('box-down')
+    # print(S4)
+    # print(S3)
     # rospy.sleep(1)
     # # S1 = PRC.moveStop()
     # # print(S1)
@@ -82,23 +167,28 @@ if __name__ == '__main__':
     # object_list = PRC.add_mesh(object_path, refer_frame, object_id, object_pose_list, size)
     # print(object_list)
 
-    # mesh_path = '/home/wanze/hanging-point-detection/Data_exp/RW_Experiment/Hanger/sword/hanger_mesh/final_mesh.obj'
-    # object_id = 'hanger'
-    # object_pose_list = [0, 0, 0, 0, 0, 0, 1]
-    # size = (1,1,1)
-    # attached_objects = PRC.attach_mesh(mesh_path, object_id, object_pose_list, size)
+    # ## attach camera into robot: 
+    # curr_pose = PRC.getPose()
+    # T_r = getHomogeneous(curr_pose.pose)
+    # T_ec = np.array([[-6.73851165e-01, -2.72292884e-02, -7.38365203e-01, -3.23465002e-02],
+    #                     [-7.38645439e-01,  3.48784888e-04,  6.74094054e-01,  5.16487860e-02],
+    #                     [-1.80975708e-02,  9.99629153e-01, -2.03478188e-02,  2.44647078e-02],
+    #                     [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,  1.00000000e+00]])
+    # T = T_r @ T_ec
+    # q = rotm2quat(T[0:3, 0:3])
+    # q = [q[1], q[2], q[3], q[0]] # need to adjust the order of quat from [w, x, y, z] to [x, y, z, w]
+    # print(q)
+    # p = [T[0, 3], T[1, 3], T[2, 3]]
+    # object_pose = [p[0], p[1], p[2], q[0], q[1], q[2], q[3]]
+    # # add camera: 
+    # box_name = 'camera'
+    # refer_frame = 'world'
+    # box_size = (0.19, 0.03, 0.04)
+    # object_list = PRC.add_box(box_name, refer_frame, object_pose, box_size)
+    # print(object_list)    
+    # mesh_path = ''
+    # attached_objects = PRC.attach_mesh(mesh_path, box_name, object_pose, size=(1,1,1))
     # print(attached_objects)
-
-    # SS = PRC.remove_attach_mesh('hanger')
-    # print(SS)
-    mesh_path = '/home/wanze/hanging-point-detection/Data_exp/RW_Experiment/Hanger/sword/hanger_mesh/final_mesh.obj'
-    refer_frame = 'world'
-    obj_name = 'hanger'
-    object_pose_list = [0, 0, 0, 0, 0, 0, 1]
-    object_size = (1,1,1)
-    mesh_list = PRC.add_mesh(mesh_path, refer_frame, obj_name, object_pose_list, object_size)
-    print(mesh_list)
-
 
     # box_name = 'box-up'
     # refer_frame = 'world'
@@ -123,7 +213,7 @@ if __name__ == '__main__':
 
     # box_name = 'wall_h'
     # refer_frame = 'world'
-    # box_pose_list = [0.82,-0.015,0.63,0,0,0,1]
+    # box_pose_list = [0.82,-0.015,0.73,0,0,0,1]
     # box_size = (0.04, 0.23, 0.10)
     # object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
     # print(object_list)

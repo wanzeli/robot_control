@@ -68,10 +68,12 @@ catkin_python_setup()
   getJoints.srv
   getGripper.srv
   getPose.srv
+  getForce.srv
   addMesh.srv
   addBox.srv
   attachMesh.srv
   removeMesh.srv
+  removeObject.srv
  )
 
 ## Generate actions in the 'action' folder

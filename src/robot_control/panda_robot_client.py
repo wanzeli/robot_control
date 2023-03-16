@@ -3,7 +3,7 @@
 import rospy
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Pose
-from robot_control.srv import move2joint, moveGripper, move2pose, stop, getJoints, getGripper, getPose, addMesh, addBox, attachMesh, removeMesh
+from robot_control.srv import move2joint, moveGripper, move2pose, stop, getJoints, getGripper, getPose, getForce, addMesh, addBox, attachMesh, removeMesh, removeObject
 import numpy as np
 
 '''
@@ -103,6 +103,13 @@ class panda_robot_client():
 
         return curr_pose
     
+    def getForce(self): 
+        rospy.wait_for_service('panda_get_force')
+        get_force_client = rospy.ServiceProxy('panda_get_force', getForce)
+        curr_force = get_force_client()
+
+        return curr_force
+
     def add_mesh(self, object_path, refer_frame, object_id, object_pose_list, size = (1,1,1)): 
         rospy.wait_for_service('add_mesh')
         add_mesh_client = rospy.ServiceProxy('add_mesh', addMesh)
@@ -128,6 +135,13 @@ class panda_robot_client():
         rospy.wait_for_service('detach_mesh')
         detach_mesh_client = rospy.ServiceProxy('detach_mesh', removeMesh)
         success = detach_mesh_client(mesh_name)
+
+        return success
+
+    def remove_object(self, object_id): 
+        rospy.wait_for_service('remove_object')
+        remove_object_client = rospy.ServiceProxy('remove_object', removeObject)
+        success = remove_object_client(object_id)
 
         return success
 
