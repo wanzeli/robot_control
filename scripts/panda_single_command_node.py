@@ -7,7 +7,8 @@ from robot_control.utils import *
 import moveit_commander
 import geometry_msgs.msg
 from geometry_msgs.msg import Pose
-# from scipy.spatial.transform import Rotation as R
+from scipy.spatial.transform import Rotation as R
+import std_msgs.msg
 
 class dumb_place(): 
 
@@ -72,6 +73,7 @@ class dumb_place():
         return success
 
 if __name__ == '__main__':
+    rospy.init_node('single_move')
     PRC = panda_robot_client()
     # T1 = [0.0, -np.pi/8, 0.0, -2*np.pi/4, 0.0, np.pi/1.1, np.pi/5]
     # T2 = [0.4, 0.1, 0.4, 0, 0, 0, 1]
@@ -98,18 +100,36 @@ if __name__ == '__main__':
     # T1 = [0.1, -np.pi / 4, 0.0, -2 * np.pi / 3, 0.0, np.pi / 3, np.pi / 4]
     # T1 = [0.007464191876351833, -0.10961239039897919, -0.21164244413375854, -2.3060545921325684, -0.0010407171212136745, 2.214181900024414, 1.409178614616394]
     # T1 = [-0.2164285033941269, 0.3437270224094391, -0.45246851444244385, -0.9604554772377014, 0.746423065662384, 2.889063596725464, 1.1668925285339355]
-    S1 = PRC.moveToJoint(T1)
-    print(S1)
+    # T1 = [0.1, -np.pi / 4, 0.0, -2 * np.pi / 3, 0.0, np.pi / 3, np.pi / 4]
+    # T1 = [0.36398524045944214, 0.39771226048469543, -0.5281479954719543, -0.6297473311424255, 0.25043225288391113, 3.1724419593811035, 0.6444401741027832]
+    # S1 = PRC.moveToJoint(T1)
+    # print(S1)
 
     # test of DP: 
     # test_pose = [0.5883997082710266, 0.005055442452430725, 0.5375858545303345, -0.7093841433525085, 0.22160424292087555, -0.622818112373352, 0.2444652020931244]
-    # DP = dumb_place()
+    DP = dumb_place()
+    curr_pose = PRC.getPose().pose
+    pose_goal = Pose()
+    pose_goal.position.x = place_pose[0] + 0.1
+    pose_goal.position.y = place_pose[1]
+    pose_goal.position.z = place_pose[2]
+    pose_goal.orientation.x = place_pose[3]
+    pose_goal.orientation.y = place_pose[4]
+    pose_goal.orientation.z = place_pose[5]
+    pose_goal.orientation.w = place_pose[6]
+    waypoints = []
+    waypoints.append(pose_goal)   
+    print(waypoints)
+    (plan, fraction) = DP.move_group.compute_cartesian_path(waypoints, 0.01, 0.0) 
+    # cjv = DP.move_group.get_current_joint_values()
+    # print(cjv)
     # curr_pose = PRC.getPose().pose
     # while curr_pose[2] > 0.48 and DP.stop == False: 
     #     local_pose = [curr_pose[0], curr_pose[1], curr_pose[2]-0.005, curr_pose[3], curr_pose[4], curr_pose[5], curr_pose[6]]
     #     S = DP.go_to_pose(test_pose)
     #     curr_pose = PRC.getPose().pose
     #     print(S)
+
 
     # force = PRC.getForce()
     # print(force)
@@ -132,13 +152,13 @@ if __name__ == '__main__':
     # S2 = PRC.moveToPose(place_pose)
     # print(S2)
     
-    curr_pose = PRC.getPose()
+    curr_pose = PRC.getPose('panda_hand_tcp')
     print(curr_pose.pose)
-    curr_state = PRC.getJointStates()
-    print(curr_state.joints_state)
-
-    # width = 0.002#0.065/2
-    # S3 = PRC.moveGripper(width)
+    # curr_state = PRC.getJointStates()
+    # print(curr_state.joints_state)
+    stop_success = PRC.moveStop()
+    width = 0.05#0.065/2
+    S3 = PRC.moveGripper(width)
 
     # g_w = PRC.getGripperStates()
     # print(g_w.gripper_state[0])
@@ -190,12 +210,12 @@ if __name__ == '__main__':
     # attached_objects = PRC.attach_mesh(mesh_path, box_name, object_pose, size=(1,1,1))
     # print(attached_objects)
 
-    # box_name = 'box-up'
-    # refer_frame = 'world'
-    # box_pose_list = [0.455,-0.01,0.2185,0,0,0,1]
-    # box_size = (0.30, 0.29, 0.097)
-    # object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
-    # print(object_list)
+    box_name = 'box-up'
+    refer_frame = 'world'
+    box_pose_list = [0.455,-0.01,0.2185,0,0,0,1]
+    box_size = (0.30, 0.29, 0.097)
+    object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
+    print(object_list)
 
     # box_name = 'box-down'
     # refer_frame = 'world'
@@ -213,7 +233,7 @@ if __name__ == '__main__':
 
     # box_name = 'wall_h'
     # refer_frame = 'world'
-    # box_pose_list = [0.82,-0.015,0.73,0,0,0,1]
+    # box_pose_list = [0.82,-0.015,0.68,0,0,0,1] #[0.82,-0.015,0.73,0,0,0,1]
     # box_size = (0.04, 0.23, 0.10)
     # object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
     # print(object_list)
@@ -252,3 +272,4 @@ if __name__ == '__main__':
     # box_size = (0.04, 0.04, 0.50)
     # object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
     # print(object_list)
+
