@@ -89,6 +89,8 @@ class pandaRobotServer():
         waypoints.append(end_pose)   
         (plan, fraction) = self.move_group.compute_cartesian_path(waypoints, 0.01, 0.0) 
         move_success = self.move_group.execute(plan, wait=True)
+        move_group.stop()
+        move_group.clear_pose_targets()
 
         if move_success:
             success = 1
