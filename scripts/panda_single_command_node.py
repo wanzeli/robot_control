@@ -102,8 +102,8 @@ if __name__ == '__main__':
     # T1 = [-0.2164285033941269, 0.3437270224094391, -0.45246851444244385, -0.9604554772377014, 0.746423065662384, 2.889063596725464, 1.1668925285339355]
     # T1 = [0.1, -np.pi / 4, 0.0, -2 * np.pi / 3, 0.0, np.pi / 3, np.pi / 4]
     # T1 = [0.36398524045944214, 0.39771226048469543, -0.5281479954719543, -0.6297473311424255, 0.25043225288391113, 3.1724419593811035, 0.6444401741027832]
-    # S1 = PRC.moveToJoint(T1)
-    # print(S1)
+    S1 = PRC.moveToJoint(T1)
+    print(S1)
 
     # test of DP: 
     # test_pose = [0.5883997082710266, 0.005055442452430725, 0.5375858545303345, -0.7093841433525085, 0.22160424292087555, -0.622818112373352, 0.2444652020931244]
@@ -139,13 +139,18 @@ if __name__ == '__main__':
     # S2 = PRC.moveToPose(place_pose)
     # print(S2)
     
-    curr_pose = PRC.getPose()
-    print(curr_pose.pose)
-    # curr_state = PRC.getJointStates()
-    # print(curr_state.joints_state)
-    stop_success = PRC.moveStop()
-    width = 0.05#0.065/2
-    S3 = PRC.moveGripper(width)
+    # curr_pose = PRC.getPose()
+    # print(curr_pose.pose)
+    # # curr_state = PRC.getJointStates()
+    # # print(curr_state.joints_state)
+    # start_pose = curr_pose.pose
+    # end_pose = [start_pose[0] + 0.1, start_pose[1], start_pose[2], start_pose[3], start_pose[4], start_pose[5], start_pose[6]]
+    # success = PRC.moveTraj(end_pose)
+    # print(success)
+
+    # stop_success = PRC.moveStop()
+    # width = 0.05#0.065/2
+    # S3 = PRC.moveGripper(width)
 
     # g_w = PRC.getGripperStates()
     # print(g_w.gripper_state[0])
