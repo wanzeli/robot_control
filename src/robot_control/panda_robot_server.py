@@ -25,6 +25,8 @@ class pandaRobotServer():
 
         self.allowReplanning()
         r_ground = self.addGround()
+        self.move_group.set_max_velocity_scaling_factor(0.2)
+        self.move_group.set_max_acceleration_scaling_factor(0.2)
 
         # set up the subscriber to get force: 
         
@@ -88,16 +90,22 @@ class pandaRobotServer():
         waypoints = []
         waypoints.append(end_pose)   
         (plan, fraction) = self.move_group.compute_cartesian_path(waypoints, 0.01, 0.0) 
-        move_success = self.move_group.execute(plan, wait=True)
-        self.move_group.stop()
-        self.move_group.clear_pose_targets()
+        if fraction == 1.0: 
+            print('plan success')
+            move_success = self.move_group.execute(plan, wait=True)
+            self.move_group.stop()
+            self.move_group.clear_pose_targets()
 
-        if move_success:
-            success = 1
-            rospy.loginfo("Success")
-        else:
+            if move_success:
+                success = 1
+                rospy.loginfo("Success")
+            else:
+                success = 0
+                rospy.loginfo("Failure")
+
+        else: 
+            print('plan failed and only success for ', str(fraction*100), '%')
             success = 0
-            rospy.loginfo("Failure")
 
         return success
 
