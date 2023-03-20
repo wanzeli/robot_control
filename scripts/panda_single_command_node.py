@@ -107,20 +107,7 @@ if __name__ == '__main__':
 
     # test of DP: 
     # test_pose = [0.5883997082710266, 0.005055442452430725, 0.5375858545303345, -0.7093841433525085, 0.22160424292087555, -0.622818112373352, 0.2444652020931244]
-    DP = dumb_place()
-    curr_pose = PRC.getPose().pose
-    pose_goal = Pose()
-    pose_goal.position.x = place_pose[0] + 0.1
-    pose_goal.position.y = place_pose[1]
-    pose_goal.position.z = place_pose[2]
-    pose_goal.orientation.x = place_pose[3]
-    pose_goal.orientation.y = place_pose[4]
-    pose_goal.orientation.z = place_pose[5]
-    pose_goal.orientation.w = place_pose[6]
-    waypoints = []
-    waypoints.append(pose_goal)   
-    print(waypoints)
-    (plan, fraction) = DP.move_group.compute_cartesian_path(waypoints, 0.01, 0.0) 
+
     # cjv = DP.move_group.get_current_joint_values()
     # print(cjv)
     # curr_pose = PRC.getPose().pose
@@ -152,7 +139,7 @@ if __name__ == '__main__':
     # S2 = PRC.moveToPose(place_pose)
     # print(S2)
     
-    curr_pose = PRC.getPose('panda_hand_tcp')
+    curr_pose = PRC.getPose()
     print(curr_pose.pose)
     # curr_state = PRC.getJointStates()
     # print(curr_state.joints_state)
