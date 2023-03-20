@@ -7,7 +7,7 @@ from robot_control.utils import *
 import moveit_commander
 import geometry_msgs.msg
 from geometry_msgs.msg import Pose
-from scipy.spatial.transform import Rotation as R
+# from scipy.spatial.transform import Rotation as R
 
 class dumb_place(): 
 
