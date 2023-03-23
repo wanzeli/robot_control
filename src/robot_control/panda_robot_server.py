@@ -8,6 +8,8 @@ from robot_control.srv import move2joint, move2pose, moveGripper, stop, getJoint
 import time
 import actionlib
 import franka_gripper.msg
+from moveit_msgs.msg import RobotTrajectory
+from trajectory_msgs.msg import JointTrajectoryPoint
 from control_msgs.msg import GripperCommandAction, GripperCommandGoal
 from scipy.spatial.transform import Rotation as R
 import numpy as np
@@ -25,9 +27,10 @@ class pandaRobotServer():
 
         self.allowReplanning()
         r_ground = self.addGround()
-        self.move_group.set_max_velocity_scaling_factor(0.2)
-        self.move_group.set_max_acceleration_scaling_factor(0.2)
-
+        self.move_group.set_max_velocity_scaling_factor(0.1)
+        rospy.sleep(0.5)
+        self.move_group.set_max_acceleration_scaling_factor(0.1)
+        rospy.sleep(0.5)
         # set up the subscriber to get force: 
         
         self.forceSub = rospy.Subscriber(force_topic, geometry_msgs.msg.WrenchStamped, self.getForceCb)
@@ -89,16 +92,54 @@ class pandaRobotServer():
         '''
         waypoints = []
         waypoints.append(end_pose)   
-        (plan, fraction) = self.move_group.compute_cartesian_path(waypoints, 0.01, 1000.0) 
-        move_success = self.move_group.execute(plan, wait=True)
-        self.move_group.stop()
-        self.move_group.clear_pose_targets()
-
+        (plan, fraction) = self.move_group.compute_cartesian_path(waypoints, 0.001, 10.0) 
+        if fraction == 1.0: 
+            print('linear path plan success')
+            # ref_state_in = self.move_group.get_current_pose()
+            # velocity_scaling_factor = 0.2
+            # traj_retime = self.move_group.retime_trajectory(ref_state_in, plan, velocity_scaling_factor)
+            new_traj = self.scale_trajectory_speed(plan, scale=0.2)
+            move_success = self.move_group.execute(new_traj, wait=True)
+            self.move_group.stop()
+            self.move_group.clear_pose_targets()
+            if move_success: 
+                success = 1
+                rospy.loginfo('Success')
+            else: 
+                success = 0
+                rospy.loginfo('Failure')
         else: 
             print('plan failed and only success for ', str(fraction*100), '%')
             success = 0
 
         return success
+
+    def scale_trajectory_speed(self, traj, scale):
+        # Create a new trajectory object
+        new_traj = RobotTrajectory()
+        # Initialize the new trajectory to be the same as the planned trajectory
+        new_traj.joint_trajectory = traj.joint_trajectory
+        # Get the number of joints involved
+        n_joints = len(traj.joint_trajectory.joint_names)
+        # Get the number of points on the trajectory
+        n_points = len(traj.joint_trajectory.points)
+        # Store the trajectory points
+        points = list(traj.joint_trajectory.points)
+        # Cycle through all points and scale the time from start, speed and acceleration
+        for i in range(n_points):
+            point = JointTrajectoryPoint()
+            point.time_from_start = traj.joint_trajectory.points[i].time_from_start / scale
+            point.velocities = list(traj.joint_trajectory.points[i].velocities)
+            point.accelerations = list(traj.joint_trajectory.points[i].accelerations)
+            point.positions = traj.joint_trajectory.points[i].positions
+            for j in range(n_joints):
+                point.velocities[j] = point.velocities[j] * scale
+                point.accelerations[j] = point.accelerations[j] * scale * scale
+            points[i] = point
+        # Assign the modified points to the new trajectory
+        new_traj.joint_trajectory.points = points
+        # Return the new trajectory
+        return new_traj
 
     def move_gripper(self, width=0.035):
 

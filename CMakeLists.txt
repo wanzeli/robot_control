@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   message_generation
   moveit_msgs
+  trajectory_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -90,6 +91,7 @@ catkin_python_setup()
    geometry_msgs
    std_msgs
    moveit_msgs
+   trajectory_msgs
  )
 
 ################################################
