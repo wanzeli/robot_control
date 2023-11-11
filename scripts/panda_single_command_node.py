@@ -102,8 +102,9 @@ if __name__ == '__main__':
     # T1 = [-0.2164285033941269, 0.3437270224094391, -0.45246851444244385, -0.9604554772377014, 0.746423065662384, 2.889063596725464, 1.1668925285339355]
     # T1 = [0.1, -np.pi / 4, 0.0, -2 * np.pi / 3, 0.0, np.pi / 3, np.pi / 4]
     # # T1 = [0.36398524045944214, 0.39771226048469543, -0.5281479954719543, -0.6297473311424255, 0.25043225288391113, 3.1724419593811035, 0.6444401741027832]
-    # S1 = PRC.moveToJoint(T1)
-    # print(S1)
+    # T1 = [-0.5978644490242004, 0.165483757853508, -0.6527774333953857, -1.2522087097167969, 1.3006049394607544, 2.4343881607055664, 0.7244192957878113]
+    S1 = PRC.moveToJoint(T1)
+    print(S1)
 
     # test of DP: 
     # test_pose = [0.5883997082710266, 0.005055442452430725, 0.5375858545303345, -0.7093841433525085, 0.22160424292087555, -0.622818112373352, 0.2444652020931244]
@@ -127,7 +128,12 @@ if __name__ == '__main__':
     # # T2 = [0.6393822431564331, 0.0031410674564540386, 0.5713240504264832, -0.6695536971092224, 0.2640250027179718, -0.6465916037559509, 0.2528001666069031]
     # T2 = [0.15, 0.3, 0.5592673633147, 0.486773551136288, -0.47951924717505795, 0.6268556890443894, -0.3743858258742136]
     # place_pose = [0.5943218858081931, 0.04779632998015265, 0.4644853344898147, 0.34337192086029567, 0.6297754792810232, 0.28647646205305793, 0.635145500142]
-    # S2 = PRC.moveToPose(place_pose)
+    # pre_grasp_pose = [0.39002668, -0.01222324,  0.30, 0.9486833,  0.,         0.05760683, 0.31093641 ]
+    # grasp_pose = [0.39002668, -0.01222324,  0.19, -0.31093641,  0.05760683,  0.,          0.9486833 ]
+    # pre_grasp_pose = [0.46483631, -0.05521959,  0.5, 0.85282501, 0.52219678,  0.,          0.        ]
+    
+    # image_capture_pose = [0.43504,0.02237,0.71209,-0.692943215,0.222198322,-0.640276134,0.245975807]
+    # S2 = PRC.moveToPose(pre_grasp_pose)
     # print(S2)
 
     # P1 = PRC.planToPose(grasp_pose)
@@ -136,11 +142,19 @@ if __name__ == '__main__':
     # T3 = [0.3, 0.3, 0.5592673633147, 0.486773551136288, -0.47951924717505795, 0.6268556890443894, -0.3743858258742136]
     # pre_place_pose = [0.6150994959022268, 0.07523005487653417, 0.809922364005978, 0.12496298395989684, -0.6909510755185653, 0.6985811909707228, 0.1376778250173312]
     # place_pose = [0.4865148663520813, -0.1013362854719162, 0.3914080560207367 + 0.2, -0.6926869750022888, 0.7211161851882935, 0.00023159988631960005, 0.013272421434521675]
+
+    # place_pose = [0.5473443016647985, -0.1287495521686926, 0.39804343441817625, -0.2794556811770363, 0.709270469020906, 0.4976788562550002, 0.4137096567273449]
+    # S2 = PRC.planToPose(place_pose)
+    # print(S2)
     # S2 = PRC.moveToPose(place_pose)
     # print(S2)
-    
-    # curr_pose = PRC.getPose('panda_hand_tcp')
-    # print(curr_pose.pose)
+    curr_pose = PRC.getPose('')
+    print(curr_pose.pose)
+    # curr_pose = PRC.getPose()
+    # print(curr_pose.pose)   
+    # hang_pose = [0.3908325718913872, 0.0, 0.74, 0.9180517148880304, -0.36541012465997913, -0.044793667911032974, -0.1471394471316283]
+    # S2 = PRC.moveToPose(hang_pose)
+    # print(S2)
     # PRC.remove_attach_mesh('hanger')
     curr_state = PRC.getJointStates()
     print(curr_state.joints_state)
@@ -149,9 +163,9 @@ if __name__ == '__main__':
     # success = PRC.moveTraj(end_pose)
     # print(success)
 
-    stop_success = PRC.moveStop()
-    width = 0.07#0.065/2
-    S3 = PRC.moveGripper(width)
+    # stop_success = PRC.moveStop()
+    # width = 0.08#0.065/2
+    # S3 = PRC.moveGripper(width)
 
     # g_w = PRC.getGripperStates()
     # print(g_w.gripper_state[0])
@@ -200,8 +214,20 @@ if __name__ == '__main__':
     # object_list = PRC.add_box(box_name, refer_frame, object_pose, box_size)
     # print(object_list)    
     # mesh_path = ''
-    # attached_objects = PRC.attach_mesh(mesh_path, box_name, object_pose, size=(1,1,1))
+    # object_id = 'hanger'
+    # object_pose_list = [0.34562857414114057, 0.34248128065060207, 0.6445910544825247, 0.6359756560261691, 0.011879402832485234, -0.2952853024151487, 0.7128817818600933]
+    # refer_frame = 'world'
+    # match_name = 'potato_mesher_oxhead'
+    # mesh_path = '/home/franka/final_mesh.obj'
+    # attached_objects = PRC.attach_mesh(mesh_path, object_id, object_pose_list, size=(1,1,1))
     # print(attached_objects)
+
+    # box_name = '4040'
+    # refer_frame = 'world'
+    # box_pose_list = [0.775,0.03,0.60,0,0,0,1]
+    # box_size = (0.25, 0.04, 0.04)
+    # object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
+
 
     # box_name = 'box-up'
     # refer_frame = 'world'

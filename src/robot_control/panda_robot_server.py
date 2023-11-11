@@ -495,5 +495,23 @@ class pandaRobotServer():
         rospy.Service("detach_mesh", removeMesh, self.detach_mesh_handle)
         rospy.Service("remove_object", removeObject, self.remove_object_handle)
 
+from sensor_msgs.msg import JointState
 
+if __name__ == "__main__":
+    right_arm_name = 'right_arm'   
+    right_hand_name = 'right_hand' 
+    left_arm_name = 'left_arm'
+    left_hand_name = 'left_hand'
+    robot = moveit_commander.RobotCommander()
+    scene = moveit_commander.PlanningSceneInterface()
+    move_group_r = moveit_commander.MoveGroupCommander(right_arm_name)
+    move_group_hand_r = moveit_commander.MoveGroupCommander(right_hand_name)
+    move_group_l = moveit_commander.MoveGroupCommander(left_arm_name)
+    move_group_hand_l = moveit_commander.MoveGroupCommander(left_hand_name) 
+    target_state = [0.0, -np.pi / 4, 0.0, -2 * np.pi / 3, 0.0, np.pi / 3, np.pi / 4]
+    move_success = move_group_r.go(target_state, wait=True)
+    move_group_r.stop()
+    time.sleep(1)
+    move_success = move_group_l.go(target_state, wait=True)
+    move_group_l.stop()
 
