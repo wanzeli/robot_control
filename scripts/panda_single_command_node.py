@@ -140,16 +140,16 @@ if __name__ == '__main__':
     S2 = PRC.moveToPose(Tp)
     print(S2)
     
-    # curr_pose = PRC.getPose('panda_hand_tcp')
+    # # curr_pose = PRC.getPose('panda_hand_tcp')
     # print(curr_pose.pose)
     # PRC.remove_attach_mesh('hanger')
     curr_state = PRC.getJointStates()
     print(curr_state.joints_state)
     # curr_pose = PRC.getPose('')
-    # print(curr_pose.pose)
-    # PRC.remove_attach_mesh('hanger')
-    # curr_state = PRC.getJointStates()
-    # print(curr_state.joints_state)
+    # # print(curr_pose.pose)
+    # # PRC.remove_attach_mesh('hanger')
+    curr_state = PRC.getJointStates()
+    print(curr_state.joints_state)
     # start_pose = curr_pose.pose
     # end_pose = [start_pose[0] + 0.1, start_pose[1], start_pose[2], start_pose[3], start_pose[4], start_pose[5], start_pose[6]]
     # success = PRC.moveTraj(end_pose)

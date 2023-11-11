@@ -8,7 +8,9 @@ import yaml
 from yaml import CLoader
 from scipy.spatial.transform import Rotation as R
 import open3d as o3d
-from moveit_msgs.msg import RobotTrajectory, JointTrajectoryPoint
+from moveit_msgs.msg import RobotTrajectory
+from trajectory_msgs.msg import JointTrajectoryPoint
+
 
 
 def quat2rotm(quat):
