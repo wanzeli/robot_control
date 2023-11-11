@@ -4,25 +4,16 @@ from robot_control.panda_robot_server import pandaRobotServer
 if __name__ == "__main__":
     # initial ROS node: 
     rospy.init_node("panda_robot_server_start")
-    # # create server object
-    # Franka_server = pandaRobotServer()
-    # Franka_server.run_panda_service()
-    # curr_state = Franka_server.move_group.get_current_joint_values()
-    # print('current joint state is: ', curr_state)
+    # create server object
+    group_name = 'left_arm'
+    group_hand_name = 'left_hand'
+    panda_id = 'panda_2'
+    Franka_server = pandaRobotServer(group_name, group_hand_name, panda_id)
+    Franka_server.run_panda_service()
+    rospy.sleep(1.0)
+    curr_pose = Franka_server.move_group.get_current_pose()
+    print('current pose is: ', curr_pose)
 
-    right_arm_name = 'right_arm'   
-    right_hand_name = 'right_hand' 
-    left_arm_name = 'left_arm'
-    left_hand_name = 'left_hand'
-    Franka_server_right = pandaRobotServer(right_arm_name, right_hand_name)
-    Franka_server_left = pandaRobotServer(left_arm_name, left_hand_name)
-
-    Franka_server_right.run_panda_service()
-    curr_state_right = Franka_server_right.move_group.get_current_joint_values()
-    print('current joint state for right arm is: ', curr_state_right)
-
-    # Franka_server_left.run_panda_service()
-    # curr_state_right = Franka_server_left.move_group.get_current_joint_values()
-    # print('current joint state for left arm is: ', curr_state_right)
-
+    curr_state = Franka_server.move_group.get_current_joint_values()
+    print('current joint state is: ', curr_state)
     rospy.spin()

@@ -3,7 +3,7 @@
 import rospy
 from robot_control.panda_robot_client import panda_robot_client
 import numpy as np
-from robot_control.utils import *
+# from robot_control.utils import *
 import moveit_commander
 import geometry_msgs.msg
 from geometry_msgs.msg import Pose
@@ -158,11 +158,19 @@ if __name__ == '__main__':
     # PRC.remove_attach_mesh('hanger')
     curr_state = PRC.getJointStates()
     print(curr_state.joints_state)
+    # curr_pose = PRC.getPose('')
+    # # print(curr_pose.pose)
+    # # PRC.remove_attach_mesh('hanger')
+    curr_state = PRC.getJointStates()
+    print(curr_state.joints_state)
     # start_pose = curr_pose.pose
     # end_pose = [start_pose[0] + 0.1, start_pose[1], start_pose[2], start_pose[3], start_pose[4], start_pose[5], start_pose[6]]
     # success = PRC.moveTraj(end_pose)
     # print(success)
 
+    stop_success = PRC.moveStop()
+    width = 0.06#0.065/2
+    S3 = PRC.moveGripper(width)
     # stop_success = PRC.moveStop()
     # width = 0.08#0.065/2
     # S3 = PRC.moveGripper(width)
@@ -221,6 +229,28 @@ if __name__ == '__main__':
     # mesh_path = '/home/franka/final_mesh.obj'
     # attached_objects = PRC.attach_mesh(mesh_path, object_id, object_pose_list, size=(1,1,1))
     # print(attached_objects)
+    # ## attach camera into robot: 
+    # curr_pose = PRC.getPose()
+    # T_r = getHomogeneous(curr_pose.pose)
+    # T_ec = np.array([[-6.73851165e-01, -2.72292884e-02, -7.38365203e-01, -3.23465002e-02],
+    #                     [-7.38645439e-01,  3.48784888e-04,  6.74094054e-01,  5.16487860e-02],
+    #                     [-1.80975708e-02,  9.99629153e-01, -2.03478188e-02,  2.44647078e-02],
+    #                     [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,  1.00000000e+00]])
+    # T = T_r @ T_ec
+    # q = rotm2quat(T[0:3, 0:3])
+    # q = [q[1], q[2], q[3], q[0]] # need to adjust the order of quat from [w, x, y, z] to [x, y, z, w]
+    # print(q)
+    # p = [T[0, 3], T[1, 3], T[2, 3]]
+    # object_pose = [p[0], p[1], p[2], q[0], q[1], q[2], q[3]]
+    # # add camera: 
+    # box_name = 'camera'
+    # refer_frame = 'world'
+    # box_size = (0.19, 0.03, 0.04)
+    # object_list = PRC.add_box(box_name, refer_frame, object_pose, box_size)
+    # print(object_list)    
+    # mesh_path = ''
+    # attached_objects = PRC.attach_mesh(mesh_path, box_name, object_pose, size=(1,1,1))
+    # print(attached_objects)
 
     # box_name = '4040'
     # refer_frame = 'world'
@@ -242,6 +272,12 @@ if __name__ == '__main__':
     # box_size = (0.40, 0.29, 0.17)
     # object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
     # print(object_list)
+    # box_name = 'box-down'
+    # refer_frame = 'world'
+    # box_pose_list = [0.455,-0.01,0.085,0,0,0,1]
+    # box_size = (0.40, 0.29, 0.17)
+    # object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
+    # print(object_list)
 
     # box_name = 'wall_v'
     # refer_frame = 'world'
@@ -249,7 +285,19 @@ if __name__ == '__main__':
     # box_size = (0.04, 0.04, 0.80)
     # object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
     # print(object_list)
+    # box_name = 'wall_v'
+    # refer_frame = 'world'
+    # box_pose_list = [0.82,-0.15,0.40,0,0,0,1]
+    # box_size = (0.04, 0.04, 0.80)
+    # object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
+    # print(object_list)
 
+    # box_name = 'wall_h'
+    # refer_frame = 'world'
+    # box_pose_list = [0.82,-0.015,0.68,0,0,0,1] #[0.82,-0.015,0.73,0,0,0,1]
+    # box_size = (0.04, 0.23, 0.10)
+    # object_list = PRC.add_box(box_name, refer_frame, box_pose_list, box_size)
+    # print(object_list)
     # box_name = 'wall_h'
     # refer_frame = 'world'
     # box_pose_list = [0.82,-0.015,0.68,0,0,0,1] #[0.82,-0.015,0.73,0,0,0,1]

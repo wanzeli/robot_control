@@ -4,6 +4,7 @@ import rospy
 import moveit_commander
 import geometry_msgs.msg
 import moveit_msgs.msg
+from sensor_msgs.msg import JointState
 from robot_control.srv import move2joint, move2pose, moveGripper, stop, getJoints, getGripper, getPose, addMesh, addBox, attachMesh, removeMesh, getForce, removeObject
 import time
 import actionlib
@@ -16,12 +17,25 @@ import numpy as np
 
 class pandaRobotServer():
 
-    def __init__(self, group_name='panda_arm', group_hand_name='panda_hand', force_topic='/franka_state_controller/F_ext'):
+    def __init__(self, group_name='panda_arm', group_hand_name='panda_hand', panda_id = 'panda_1', ns = 'combined_panda', force_topic='/franka_state_controller/F_ext'):
 
-        self.robot = moveit_commander.RobotCommander()
-        self.scene = moveit_commander.PlanningSceneInterface()
-        self.move_group = moveit_commander.MoveGroupCommander(group_name)
-        self.move_group_hand = moveit_commander.MoveGroupCommander(group_hand_name)
+        # self.robot = moveit_commander.RobotCommander()
+
+        # self.robot = moveit_commander.RobotCommander(robot_description="/panda_1/robot_description", ns="panda_1")
+        self.ns = ns
+        self.panda_id = panda_id
+        self.robot_description = '/' + self.ns + '/robot_description'
+        self.robot = moveit_commander.RobotCommander(robot_description=self.robot_description, ns=self.ns)
+        self.scene = moveit_commander.PlanningSceneInterface(ns=self.ns)
+        self.move_group = moveit_commander.MoveGroupCommander(group_name, robot_description=self.robot_description, ns=self.ns)
+        self.move_group_hand = moveit_commander.MoveGroupCommander(group_hand_name, robot_description=self.robot_description, ns=self.ns)
+
+
+        # self.robot = moveit_commander.RobotCommander()
+        # self.scene = moveit_commander.PlanningSceneInterface()
+        # self.move_group = moveit_commander.MoveGroupCommander(group_name)
+        # self.move_group_hand = moveit_commander.MoveGroupCommander(group_hand_name)
+
         self.eef_link = self.move_group.get_end_effector_link()
         print('the end effector link is: ', self.eef_link)
 
@@ -161,7 +175,8 @@ class pandaRobotServer():
         return success
 
     def move_gripper2(self, width=0.04, speed = 0.05):
-        self.move_action_client = actionlib.SimpleActionClient("/franka_gripper/move", franka_gripper.msg.MoveAction)
+        move_client_name = '/' + self.ns + '/' + self.panda_id + '/franka_gripper/move'
+        self.move_action_client = actionlib.SimpleActionClient(move_client_name, franka_gripper.msg.MoveAction)
         self.move_action_client.wait_for_server()
         goal = franka_gripper.msg.MoveGoal()
         goal.width = width
@@ -172,7 +187,8 @@ class pandaRobotServer():
         return result
 
     def move_gripper3(self, width=0.04, max_effort = 0.1):
-        self.move_action_client = actionlib.SimpleActionClient("/franka_gripper/action", GripperCommandAction)
+        move_client_name = '/' + self.ns + '/' + self.panda_id + '/franka_gripper/gripper_action'
+        self.move_action_client = actionlib.SimpleActionClient(move_client_name, GripperCommandAction)
         self.move_action_client.wait_for_server()
         goal = GripperCommandGoal()
         goal.command.position = width
@@ -183,7 +199,8 @@ class pandaRobotServer():
         return result
 
     def move_gripper4(self, width=0.04, epsilon_inner = 0.005, epsilon_outer = 0.05, speed = 0.05, force = 1.0):
-        self.move_action_client = actionlib.SimpleActionClient("/franka_gripper/grasp", franka_gripper.msg.GraspAction)
+        move_client_name = '/' + self.ns + '/' + self.panda_id + '/franka_gripper/grasp'
+        self.move_action_client = actionlib.SimpleActionClient(move_client_name, franka_gripper.msg.GraspAction)
         self.move_action_client.wait_for_server()
         goal = franka_gripper.msg.GraspGoal()
         goal.width = width
@@ -197,7 +214,8 @@ class pandaRobotServer():
         return result
     
     def stop_gripper(self): 
-        self.stop_action_client = actionlib.SimpleActionClient("/franka_gripper/stop", franka_gripper.msg.StopAction)
+        move_client_name = '/' + self.ns + '/' + self.panda_id + '/franka_gripper/stop'
+        self.stop_action_client = actionlib.SimpleActionClient(move_client_name, franka_gripper.msg.StopAction)
         self.stop_action_client.wait_for_server()
         goal = franka_gripper.msg.StopGoal()
         self.stop_action_client.send_goal(goal)
