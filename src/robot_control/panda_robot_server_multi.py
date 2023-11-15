@@ -15,9 +15,9 @@ from control_msgs.msg import GripperCommandAction, GripperCommandGoal
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 
-class pandaRobotServer():
+class pandaRobotServerMulti():
 
-    def __init__(self, group_name='panda_arm', group_hand_name='panda_hand', panda_id = 'panda_1', ns = 'combined_panda', force_topic='/franka_state_controller/F_ext'):
+    def __init__(self, group_name='right_arm', group_hand_name='right_hand', panda_id = 'panda_1', ns = 'combined_panda', force_topic='/franka_state_controller/F_ext'):
 
         # self.robot = moveit_commander.RobotCommander()
         # self.robot = moveit_commander.RobotCommander(robot_description="/panda_1/robot_description", ns="panda_1")

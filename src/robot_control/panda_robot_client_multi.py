@@ -9,7 +9,7 @@ import numpy as np
 '''
 This program create clients to call the panda_robot server to execute the robot action
 '''
-class panda_robot_client():
+class panda_robot_client_multi():
     def __init__(self, group_name):
         self.service_id = '_' + group_name
         pass
