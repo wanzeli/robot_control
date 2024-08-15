@@ -41,16 +41,75 @@ class pandaRobotServerMulti():
         print('the end effector link is: ', self.eef_link)
 
         self.allowReplanning()
-        r_ground = self.addGround()
-        self.move_group.set_max_velocity_scaling_factor(0.1)
+        # r_ground = self.addGround()
+        self.move_group.set_max_velocity_scaling_factor(0.04)
         rospy.sleep(0.5)
-        self.move_group.set_max_acceleration_scaling_factor(0.1)
+        self.move_group.set_max_acceleration_scaling_factor(0.02)
         rospy.sleep(0.5)
         # set up the subscriber to get force: 
         
         self.forceSub = rospy.Subscriber(force_topic, geometry_msgs.msg.WrenchStamped, self.getForceCb)
         self.force = []
-        
+    
+        self.set_env()
+
+    def set_env(self):
+        '''
+        This function is used to set up the environment
+        '''
+        # add box for object supports:
+        box_name = 'box'
+        refer_frame = 'world'
+        box_pose_list = [0.5,0,0.085,0,0,0,1]
+        box_size = (0.37, 0.6, 0.17)
+        res = self.add_box(box_name, box_size, box_pose_list, refer_frame)
+
+        # add box for object supports:
+        box_name = 'small'
+        refer_frame = 'world'
+        box_pose_list = [0.5,0,0.22,0,0,0,1]
+        box_size = (0.3, 0.3, 0.1)
+        res = self.add_box(box_name, box_size, box_pose_list, refer_frame)
+
+        # add ground:
+        ground_name = 'Ground'
+        ground_size = [10, 10, 0.01]
+        ground_pose = [0, 0, -0.01, 0, 0, 0, 1]
+        refer_frame = 'world' #self.robot.get_planning_frame()
+        res = self.add_box(ground_name, ground_size, ground_pose, refer_frame)
+        # objects_in_scene = scene.get_known_object_names()
+        # print(objects_in_scene)
+
+        # add walls:
+        ground_name = 'Camera_1_Wall'
+        ground_size = [0.7, 0.01, 0.7]
+        ground_pose = [0.45, 0.55, 0.35, 0, 0, 0, 1]
+        refer_frame = 'world' #self.robot.get_planning_frame()
+        res = self.add_box(ground_name, ground_size, ground_pose, refer_frame)
+
+        # add walls:
+        ground_name = 'Camera_2_Wall'
+        ground_size = [0.7, 0.01, 0.7]
+        ground_pose = [0.45, -0.5, 0.35, 0, 0, 0, 1]
+        refer_frame = 'world' #self.robot.get_planning_frame()
+        res = self.add_box(ground_name, ground_size, ground_pose, refer_frame)
+
+        # add walls:
+        ground_name = 'Robot_Wall_1'
+        ground_size = [0.01, 0.8, 0.8]
+        ground_pose = [2.00, 0.0, 0.4, 0, 0, 0, 1]
+        refer_frame = 'world' #self.robot.get_planning_frame()
+        res = self.add_box(ground_name, ground_size, ground_pose, refer_frame)
+
+        # add walls:
+        ground_name = 'Robot_Wall_2'
+        ground_size = [0.8, 0.01, 0.8]
+        ground_pose = [1.6, -0.7, 0.4, 0, 0, 0, 1]
+        refer_frame = 'world' #self.robot.get_planning_frame()
+        res = self.add_box(ground_name, ground_size, ground_pose, refer_frame)
+
+        return True
+
 
     def go_to_joint_state(self, joint_goal=None):
 
@@ -458,7 +517,7 @@ class pandaRobotServerMulti():
         object_pose.pose.orientation.z = object_pose_list[5]
         object_pose.pose.orientation.w = object_pose_list[6]
 
-        touch_links = self.robot.get_link_names('panda_hand') # disable collsion detection between objact and robot hand
+        touch_links = self.robot.get_link_names(self.group_hand_name) # disable collsion detection between objact and robot hand
         eef_link = self.eef_link
         self.scene.attach_mesh(eef_link, object_id, pose = object_pose, filename = object_path, size = size, touch_links = touch_links)
         rospy.sleep(1)

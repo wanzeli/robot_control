@@ -17,18 +17,15 @@ import numpy as np
 
 class pandaRobotServer():
 
-    def __init__(self, group_name='panda_arm', group_hand_name='panda_hand', panda_id = 'panda_1', ns = 'combined_panda', force_topic='/franka_state_controller/F_ext'):
+    def __init__(self, group_name='panda_arm', group_hand_name='panda_hand', force_topic='/franka_state_controller/F_ext'):
 
         # self.robot = moveit_commander.RobotCommander()
 
         # self.robot = moveit_commander.RobotCommander(robot_description="/panda_1/robot_description", ns="panda_1")
-        self.ns = ns
-        self.panda_id = panda_id
-        self.robot_description = '/' + self.ns + '/robot_description'
-        self.robot = moveit_commander.RobotCommander(robot_description=self.robot_description, ns=self.ns)
-        self.scene = moveit_commander.PlanningSceneInterface(ns=self.ns)
-        self.move_group = moveit_commander.MoveGroupCommander(group_name, robot_description=self.robot_description, ns=self.ns)
-        self.move_group_hand = moveit_commander.MoveGroupCommander(group_hand_name, robot_description=self.robot_description, ns=self.ns)
+        self.robot = moveit_commander.RobotCommander()
+        self.scene = moveit_commander.PlanningSceneInterface()
+        self.move_group = moveit_commander.MoveGroupCommander(group_name)
+        self.move_group_hand = moveit_commander.MoveGroupCommander(group_hand_name)
 
 
         # self.robot = moveit_commander.RobotCommander()
@@ -49,7 +46,94 @@ class pandaRobotServer():
         
         self.forceSub = rospy.Subscriber(force_topic, geometry_msgs.msg.WrenchStamped, self.getForceCb)
         self.force = []
-        
+        self.set_env()
+        # self.addGround()
+
+        # attach the handle to the gripper: 
+        name_l = 'left_handle'
+        object_pose_l = geometry_msgs.msg.PoseStamped()
+        object_pose_l.header.frame_id = 'panda_leftfinger'
+        object_pose_l.pose.position.x = 0
+        object_pose_l.pose.position.y = 0
+        object_pose_l.pose.position.z = 0.065
+        object_pose_l.pose.orientation.x = 0
+        object_pose_l.pose.orientation.y = 0
+        object_pose_l.pose.orientation.z = 0
+        object_pose_l.pose.orientation.w = 1
+
+        name_r = 'right_handle'
+        object_pose_r = geometry_msgs.msg.PoseStamped()
+        object_pose_r.header.frame_id = 'panda_rightfinger'
+        object_pose_r.pose.position.x = 0
+        object_pose_r.pose.position.y = 0
+        object_pose_r.pose.position.z = 0.065
+        object_pose_r.pose.orientation.x = 0
+        object_pose_r.pose.orientation.y = 0
+        object_pose_r.pose.orientation.z = 0
+        object_pose_r.pose.orientation.w = 1
+        size_x = 0.008
+        size_y = 0.005
+        size_z = 0.04#0.05
+        touch_links = self.robot.get_link_names('panda_hand')
+        self.scene.attach_box(link='panda_leftfinger', name=name_l, pose=object_pose_l, size=(0.008, 0.005, 0.04), touch_links=touch_links)
+        self.scene.attach_box(link='panda_rightfinger', name=name_r, pose=object_pose_r, size=(0.008, 0.005, 0.04), touch_links=touch_links)
+
+    def set_env(self):
+        '''
+        This function is used to set up the environment
+        '''
+        # add box for object supports:
+        box_name = 'box'
+        refer_frame = 'world'
+        box_pose_list = [0.5,0,0.085,0,0,0,1]
+        box_size = (0.37, 0.6, 0.17)
+        res = self.add_box(box_name, box_size, box_pose_list, refer_frame)
+
+        # add box for object supports:
+        box_name = 'small'
+        refer_frame = 'world'
+        box_pose_list = [0.5,0,0.25,0,0,0,1] #[0.5,0,0.22,0,0,0,1]
+        box_size = (0.3, 0.3, 0.1)
+        res = self.add_box(box_name, box_size, box_pose_list, refer_frame)
+
+        # add ground:
+        ground_name = 'Ground'
+        ground_size = [10, 10, 0.01]
+        ground_pose = [0, 0, -0.01, 0, 0, 0, 1]
+        refer_frame = 'world' #self.robot.get_planning_frame()
+        res = self.add_box(ground_name, ground_size, ground_pose, refer_frame)
+        # objects_in_scene = scene.get_known_object_names()
+        # print(objects_in_scene)
+
+        # # add walls:
+        # ground_name = 'Camera_1_Wall'
+        # ground_size = [0.7, 0.01, 0.7]
+        # ground_pose = [0.45, 0.55, 0.35, 0, 0, 0, 1]
+        # refer_frame = 'world' #self.robot.get_planning_frame()
+        # res = self.add_box(ground_name, ground_size, ground_pose, refer_frame)
+
+        # # add walls:
+        # ground_name = 'Camera_2_Wall'
+        # ground_size = [0.7, 0.01, 0.7]
+        # ground_pose = [0.45, -0.5, 0.35, 0, 0, 0, 1]
+        # refer_frame = 'world' #self.robot.get_planning_frame()
+        # res = self.add_box(ground_name, ground_size, ground_pose, refer_frame)
+
+        # add walls:
+        ground_name = 'Robot_Wall_1'
+        ground_size = [0.01, 0.8, 0.8]
+        ground_pose = [2.00, 0.0, 0.4, 0, 0, 0, 1]
+        refer_frame = 'world' #self.robot.get_planning_frame()
+        res = self.add_box(ground_name, ground_size, ground_pose, refer_frame)
+
+        # add walls:
+        ground_name = 'Robot_Wall_2'
+        ground_size = [0.8, 0.01, 0.8]
+        ground_pose = [1.6, -0.7, 0.4, 0, 0, 0, 1]
+        refer_frame = 'world' #self.robot.get_planning_frame()
+        res = self.add_box(ground_name, ground_size, ground_pose, refer_frame)
+
+        return True
 
     def go_to_joint_state(self, joint_goal=None):
 
@@ -175,7 +259,7 @@ class pandaRobotServer():
         return success
 
     def move_gripper2(self, width=0.04, speed = 0.05):
-        move_client_name = '/' + self.ns + '/' + self.panda_id + '/franka_gripper/move'
+        move_client_name = '/franka_gripper/move'
         self.move_action_client = actionlib.SimpleActionClient(move_client_name, franka_gripper.msg.MoveAction)
         self.move_action_client.wait_for_server()
         goal = franka_gripper.msg.MoveGoal()
@@ -187,7 +271,7 @@ class pandaRobotServer():
         return result
 
     def move_gripper3(self, width=0.04, max_effort = 0.1):
-        move_client_name = '/' + self.ns + '/' + self.panda_id + '/franka_gripper/gripper_action'
+        move_client_name = '/franka_gripper/gripper_action'
         self.move_action_client = actionlib.SimpleActionClient(move_client_name, GripperCommandAction)
         self.move_action_client.wait_for_server()
         goal = GripperCommandGoal()
@@ -199,7 +283,7 @@ class pandaRobotServer():
         return result
 
     def move_gripper4(self, width=0.04, epsilon_inner = 0.005, epsilon_outer = 0.05, speed = 0.05, force = 1.0):
-        move_client_name = '/' + self.ns + '/' + self.panda_id + '/franka_gripper/grasp'
+        move_client_name = '/franka_gripper/grasp'
         self.move_action_client = actionlib.SimpleActionClient(move_client_name, franka_gripper.msg.GraspAction)
         self.move_action_client.wait_for_server()
         goal = franka_gripper.msg.GraspGoal()
@@ -214,7 +298,7 @@ class pandaRobotServer():
         return result
     
     def stop_gripper(self): 
-        move_client_name = '/' + self.ns + '/' + self.panda_id + '/franka_gripper/stop'
+        move_client_name = '/franka_gripper/stop'
         self.stop_action_client = actionlib.SimpleActionClient(move_client_name, franka_gripper.msg.StopAction)
         self.stop_action_client.wait_for_server()
         goal = franka_gripper.msg.StopGoal()
